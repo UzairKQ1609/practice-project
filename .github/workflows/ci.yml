@@ -1,0 +1,69 @@
+name: CI — Build & Push Docker Image
+
+# ── TRIGGER ──────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - dev          # Runs on every push to dev
+      - main         # Runs on every push (or merge) to main
+  pull_request:
+    branches:
+      - main         # Runs as a test-only build before merging to main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── STEP 1: Checkout Code ──────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── STEP 2: Log in to DockerHub ────────────────────
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          # Using the exact secret name you confirmed
+          password: ${{ secrets.DOCKER_PASSWRD }} 
+
+      # ── STEP 3: Set up Docker Buildx ──────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── STEP 4: Smart Metadata (Tagging) ──────────────
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/practice-project
+          tags: |
+            # If pushing to main branch, tag it as 'latest'
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            # If pushing to dev branch, tag it as 'dev'
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            # Always create a unique tag based on the Git commit SHA
+            type=sha,prefix=sha-,format=short
+
+      # ── STEP 5: Build and Push ─────────────────────────
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          # Logic: Push ONLY on direct pushes to dev or main.
+          # Pull Requests will build but NOT push.
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── STEP 6: Verify the Push ────────────────────────
+      - name: Print image digest
+        # Only run this if we actually pushed to DockerHub
+        if: github.event_name == 'push'
+        run: |
+          echo "✓ Image pushed successfully"
+          echo "Digest: ${{ steps.build.outputs.digest }}"
+          echo "Tags:   ${{ steps.meta.outputs.tags }}"
