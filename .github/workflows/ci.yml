@@ -3,7 +3,7 @@ name: CI — Build & Push Docker Image
 on:
   push:
     branches:
-      - dev          # Trigger: Runs when you push code to dev #meowwww
+      - dev          # Trigger: Runs when you push code to dev #meowwww #laadly
   pull_request:
     branches:
       - main         # Trigger: Runs when you open a PR targeting main
