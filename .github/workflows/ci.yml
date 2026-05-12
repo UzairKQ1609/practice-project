@@ -62,7 +62,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          password: ${{ secrets.DOCKERHUB_PASSWRD }}
 
       # ── STEP 3: Set up Docker Buildx ──────────────────
       # Buildx is Docker's extended build system.
