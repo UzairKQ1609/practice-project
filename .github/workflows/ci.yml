@@ -1,0 +1,141 @@
+# ============================================================
+#  DevFeed — CI Pipeline
+#  GitHub Actions Workflow
+#
+#  What this does on every push to main:
+#    1. Checks out your code onto a fresh Ubuntu runner
+#    2. Logs into DockerHub using your stored secrets
+#    3. Sets up Docker Buildx (advanced builder)
+#    4. Builds the Docker image from your Dockerfile
+#    5. Pushes the image to DockerHub with two tags:
+#       - :latest          (always points to newest build)
+#       - :sha-abc1234     (permanent tag for this exact commit)
+# ============================================================
+
+name: CI — Build & Push Docker Image
+
+# ── TRIGGER ──────────────────────────────────────────────────
+# This pipeline runs when:
+#   - Code is pushed to the main branch
+#   - A pull request targets the main branch (build only, no push)
+on:
+  push:
+    branches:
+      - dev          # Runs when you push your development work
+  pull_request:
+    branches:
+      - main         # Runs as a required check before merging to main
+
+# ── JOBS ─────────────────────────────────────────────────────
+# A workflow can have multiple jobs running in parallel.
+# We have one job: build-and-push.
+jobs:
+  build-and-push:
+
+    # The runner OS — GitHub provides Ubuntu, Windows, macOS.
+    # Ubuntu is standard for Docker workloads (it's free and fast).
+    runs-on: ubuntu-latest
+
+    # ── STEPS ──────────────────────────────────────────────
+    # Steps run sequentially. If any step fails, the job stops
+    # and GitHub marks the commit with a red ✗.
+    steps:
+
+      # ── STEP 1: Checkout Code ──────────────────────────
+      # The runner starts as a blank Ubuntu machine.
+      # This step clones your repository into the runner's filesystem.
+      # Without this, the runner has no idea what your project looks like.
+      #
+      # "uses" means we're using a pre-built action from the marketplace.
+      # actions/checkout@v4 is maintained by GitHub itself.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── STEP 2: Log in to DockerHub ────────────────────
+      # Before we can push an image, we must authenticate.
+      # docker/login-action handles this securely.
+      #
+      # ${{ secrets.DOCKERHUB_USERNAME }} — GitHub reads this from
+      # your repo's encrypted secrets (Settings → Secrets).
+      # The actual value is NEVER printed in logs.
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # ── STEP 3: Set up Docker Buildx ──────────────────
+      # Buildx is Docker's extended build system.
+      # It enables:
+      #   - Multi-platform builds (amd64 + arm64 in one command)
+      #   - Better layer caching for faster builds
+      #   - BuildKit features
+      #
+      # Even if you don't need multi-platform now, this is
+      # standard practice and costs nothing to include.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── STEP 4: Extract Metadata (Tags & Labels) ──────
+      # This action automatically generates Docker image tags
+      # based on the Git context:
+      #
+      #   On push to main → generates:
+      #     yourusername/simple-devops-app:latest
+      #     yourusername/simple-devops-app:sha-abc1234
+      #
+      # Why two tags?
+      #   :latest   → convenience tag, always the newest image
+      #   :sha-xxxx → immutable tag, pinned to this exact commit
+      #               (critical for rollbacks — if :latest breaks,
+      #                you can deploy :sha-previouscommit)
+      #
+      # The output "meta" is referenced in the next step.
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/simple-devops-app
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
+
+      # ── STEP 5: Build and Push ─────────────────────────
+      # This is the main event.
+      # docker/build-push-action runs:
+      #   docker build -t yourusername/simple-devops-app:latest .
+      #   docker push yourusername/simple-devops-app:latest
+      #
+      # Key settings:
+      #   context: .         → use the repo root as build context
+      #                        (same as running docker build .)
+      #   push: true         → actually push after building
+      #                        (set to false on PRs — see below)
+      #   tags/labels        → from the metadata step above
+      #   cache-from/to      → reuse cached layers from previous builds
+      #                        dramatically speeds up rebuilds
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          # Only push on direct pushes to main.
+          # On pull_requests, we build but don't push.
+          # This validates the Dockerfile without publishing untested code.
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Cache layers using GitHub Actions cache
+          # First run: slow (no cache). Subsequent runs: much faster.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── STEP 6: Verify the Push ────────────────────────
+      # A sanity-check step: print the image digest.
+      # The digest is a SHA256 hash of the image content.
+      # This proves the push succeeded and gives you a permanent
+      # fingerprint for the exact image that was built.
+      - name: Print image digest
+        run: |
+          echo "✓ Image pushed successfully"
+          echo "Digest: ${{ steps.build.outputs.digest }}"
+          echo "Tags:   ${{ steps.meta.outputs.tags }}"
