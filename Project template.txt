@@ -1,0 +1,144 @@
+I am building a beginner-to-intermediate DevOps portfolio project and I want you to continue teaching me step-by-step like a mentor.
+
+Project Goal:
+Build a full CI/CD DevOps pipeline using:
+
+* Node.js
+* Express.js
+* Git
+* GitHub
+* Docker
+* GitHub Actions
+* DockerHub
+* Deployment later (AWS / Render / Railway)
+
+Teaching Style Required:
+
+* Teach like I am new to DevOps
+* Explain technical concepts deeply but clearly
+* Do NOT skip internal concepts
+* Connect every command to WHY it exists
+* Focus on understanding software delivery flow
+* Make everything practical and reproducible
+* Never just give code without explanation
+* Teach phase-by-phase
+
+Current Project Structure:
+
+project/
+├── .git/
+├── data/
+│   └── tasks.js
+├── routes/
+│   └── tasks.js
+├── .dockerignore
+├── .gitignore
+├── app.js
+├── Dockerfile
+├── package.json
+├── package-lock.json
+└── README.md
+
+Current package.json:
+
+{
+"name": "simple-devops-app",
+"version": "1.0.0",
+"description": "Simple Social Media Application for Devops Practice",
+"main": "app.js",
+"scripts": {
+"start": "node app.js"
+},
+"dependencies": {
+"express": "^4.18.2"
+}
+}
+
+Current app.js:
+
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+const taskRoutes = require('./routes/tasks');
+app.use('/tasks', taskRoutes);
+
+app.get('/', (req, res) => {
+res.send("DevOps Demo App Running Successfully");
+});
+
+const PORT = 3000;
+
+app.listen(PORT, () => {
+console.log(`Server running on port ${PORT}`);
+});
+
+Current routes/tasks.js:
+
+const express = require('express');
+const router = express.Router();
+let tasks = require('../data/tasks');
+
+router.post('/', (req, res) => {
+const task = req.body.task;
+tasks.push(task);
+
+```
+res.json({
+    message: "Task added successfully",
+    tasks
+});
+```
+
+});
+
+router.get('/', (req, res) => {
+res.json(tasks);
+});
+
+module.exports = router;
+
+Current data/tasks.js:
+
+let tasks = [];
+module.exports = tasks;
+
+Current Dockerfile:
+
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
+
+Project Vision:
+
+Convert this into a mini social-media style application with:
+
+* Good frontend UI
+* Create posts
+* View feed
+* Better project structure
+* Dockerized deployment
+* GitHub Actions CI/CD pipeline
+* Push Docker image to DockerHub
+* Deploy publicly later
+
+Current Learning Progress:
+
+I already understand:
+
+* Basic Node.js app structure
+* package.json
+* app.js flow
+* Express routes
+* Dockerfile basics
+* Container concept
+* CI/CD big picture
+
+Next Learning Goal:
+
+Continue from exactly where I stopped and teach me the next phase step-by-step.

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DevFeed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-bracket">[</span>
+        <span class="logo-text">DevFeed</span>
+        <span class="logo-bracket">]</span>
+      </div>
+      <div class="header-meta">
+        <span class="status-dot"></span>
+        <span class="status-text">Live · Container Running</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <main class="layout">
+
+    <!-- LEFT: COMPOSE PANEL -->
+    <aside class="compose-panel">
+      <div class="panel-label">// new_post</div>
+      <div class="compose-card">
+        <div class="avatar-row">
+          <div class="avatar">DEV</div>
+          <div class="user-info">
+            <span class="username">@developer</span>
+            <span class="user-role">DevOps Engineer</span>
+          </div>
+        </div>
+
+        <textarea
+          id="postInput"
+          class="post-input"
+          placeholder="What are you shipping today?&#10;&#10;e.g. Dockerized the app, pushed to DockerHub..."
+          maxlength="280"
+          rows="5"
+        ></textarea>
+
+        <div class="compose-footer">
+          <span class="char-count"><span id="charCount">0</span>/280</span>
+          <button class="post-btn" id="postBtn" onclick="submitPost()">
+            <span class="btn-label">SHIP IT</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TECH STACK CARD -->
+      <div class="stack-card">
+        <div class="panel-label">// stack</div>
+        <ul class="stack-list">
+          <li><span class="stack-icon">⬡</span> Node.js 20</li>
+          <li><span class="stack-icon">⬡</span> Express.js</li>
+          <li><span class="stack-icon">⬡</span> Docker</li>
+          <li><span class="stack-icon">⬡</span> GitHub Actions</li>
+          <li><span class="stack-icon">⬡</span> DockerHub</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- RIGHT: FEED -->
+    <section class="feed-section">
+      <div class="feed-header">
+        <div class="panel-label">// post_feed</div>
+        <div class="feed-controls">
+          <span id="postCount" class="post-count">0 posts</span>
+          <button class="clear-btn" onclick="clearFeed()">clear</button>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon">{ }</div>
+        <p class="empty-title">Feed is empty</p>
+        <p class="empty-sub">Ship your first post to get started</p>
+      </div>
+
+      <!-- Posts container -->
+      <div id="feedContainer" class="feed-container"></div>
+
+      <!-- Loading state -->
+      <div id="loadingState" class="loading-state hidden">
+        <div class="loader"></div>
+        <span>Fetching posts...</span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <span>Built for DevOps learning ·</span>
+    <span class="footer-api">API: <code>/posts</code></span>
+    <span>· Containerized with Docker</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+    "name": "simple-devops-app",
+    "version": "1.0.0",
+    "description": "Simple Social Media Application for Devops Practice",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js"
+    },
+    "dependencies": {
+        "express": "^4.18.2"
+    }
+}
